@@ -26,64 +26,76 @@ def listagem(listagem):
 
     lista = []
 
-    resposta = requests.get(listagem)
+    # prepare headers
+    headers = {'User-Agent': 'Py_Scraper'}
+
+    lista.append(['dorms', 'suite', 'vagas', 'bairro', 'area', 'valor' ])
+
+    resposta = requests.get(listagem, headers=headers)
 
     scrap = BeautifulSoup(resposta.text, 'html.parser')
 
 
-    for rows in scrap.find_all("div"):
+    for rows in scrap.find_all("section", class_="caracteristicas pull-left"):
         #if ("oddrow" in rows["class"]) or ("evenrow" in rows["class"]):    
         try:
-            dorms = rows.find("div", class_="destaque-caracteristicas-item destaque-dormitorios").get_text(" ",strip=True).replace("\n", "")
+            dorms = rows.find("li", class_="icone-quartos").get_text().replace(" quartos", "")
         except:
             dorms = 0
-        try:   
-            banhos = rows.find("div", class_="destaque-caracteristicas-item destaque-banheiros").get_text(" ",strip=True).replace("\n", "")
-        except:
-            banhos = 0
         try:
-            bairro = rows.find("div", class_="destaque-bairro").get_text(" ",strip=True).replace("\n", "")
+            suite = rows.find("li", class_="icone-suítes").get_text()
+        except:
+            suite = 0
+        try:   
+            vagas = rows.find("li", class_="icone-vagas").get_text(" ",strip=True)#.replace("vagas", "").replace("vaga", "")
+        except:
+            vagas = 0
+        try:
+            bairro = rows.find("span", class_="endereco pull-right").get_text(" ",strip=True).replace("\n", "")
         except:
             bairro = ""
         try:
-            area = rows.find("div", class_="destaque-caracteristicas-item destaque-area").get_text(" ",strip=True).replace(" m²", "").replace("\n", "")
+            area = rows.find("li", class_="icone-area").get_text(" ",strip=True).replace("m", "").replace(" 2", "")
         except:
             area = 0
         try:
-            valor = rows.find("div", class_="destaque-valores").get_text(" ",strip=True).replace("Venda R$ ", "").replace("\n", "").replace(".", "").replace(",00", "").replace(" "" ", "")
+            valor = rows.find("div", class_="preco").get_text(" ",strip=True).replace("R$ ", "").replace("\n", "").replace(".", "").replace(",00", "").replace(" "" ", "")
         except:
             valor = 0
 
-        lista.append([dorms, banhos, bairro, area, valor ])
+        lista.append([dorms, vagas, bairro, area, valor ])
 
     return lista
 
 
 if __name__ == "__main__":
 
-    nome_arquivo = "imoveis_osorio.csv"
+    nome_arquivo = "imoveis_capao.csv"
 
     if os.path.exists(nome_arquivo):
         os.remove(nome_arquivo)
 
-
-    #site = 'http://itamarjardimimoveis.com.br/buscar?venda=Sim#ordem=bairro&amp;venda=Sim&amp;cidade[]=Osório'
-    site = "http://itamarjardimimoveis.com.br/buscar?page="
+    site = 'https://www.zapimoveis.com.br/venda/casas/rs+capao-da-canoa/#{"precomaximo":"2147483647","parametrosautosuggest":[{"Bairro":"","Zona":"","Cidade":"CAPAO DA CANOA","Agrupamento":"","Estado":"RS"}],"pagina":"'
 
     pagina = 1
 
-    #resto = "&amp;venda=Sim"
+    resto = '","ordem":"Relevancia","paginaOrigem":"ResultadoBusca","semente":"82370447","formato":"Lista"}'
+
+    #site = 'https://www.zapimoveis.com.br/venda/casas/rs+capao-da-canoa/'
+
+
+
+   # resto = "2:%222%22,%22ordem%22:%22Relevancia%22,%22paginaOrigem%22:%22ResultadoBusca%22,%22semente%22:%22564095056%22,%22formato%22:%22Lista%22}"
 
     print("Inicializando...")
-    while pagina < 16:
-        listando = site + str(pagina)# + resto
-        print(listando)
+    while pagina < 19:
+        listando = site + str(pagina) + resto
         listas = listagem(listando)
 
         escreve_linha(listas, nome_arquivo)
         pagina += 1
 
-        print("_")
+        print(".")
 
 if pagina > 1:
     print("Scrap efetuado com sucesso! Gravando arquivo....")
