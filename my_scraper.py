@@ -1,9 +1,15 @@
 '''
 Py_scraper
 
-Web scraper usando beatiful soup
+author : Roger Monteiro
 
-Destinado a captar dados de imóveis para treinar um algoritmo 
+Simple web scraper used to adquire data from house sales sites
+You can change it to do anything you like to scrap
+Remember to check robots.txt before scrap any data!
+----
+Simples web scraper para coletar dados de imóveis
+Você pode adaptá-lo pro que quiser
+Verifique sempre o arquivo robots.txt antes de usar um scraper!
 '''
 
 from bs4 import BeautifulSoup
@@ -14,15 +20,16 @@ import csv
 import time 
 from urllib.request import urlopen 
 
-
-
+#Function to write line on csv file
+#Função que escreve as linha no arquivo csv
 def escreve_linha(linha, nome_arquivo):
     with open(nome_arquivo, 'a', encoding='utf-8') as grava:
         escreve = csv.writer(grava)
         escreve.writerows(linha)
 
+#Function that scrap data
+#Função que faz o scraping
 def listagem(listagem):
-
 
     lista = []
 
@@ -35,9 +42,14 @@ def listagem(listagem):
 
     scrap = BeautifulSoup(resposta.text, 'html.parser')
 
+    # You have to look on your target site for the places with the data you want
+    # Change 'section' and the name class
 
+    # Você precisa manualmente procurar pelos valores no ste que quer usar o scraper
+    # Procure por listas, divs, etc 
     for rows in scrap.find_all("section", class_="caracteristicas pull-left"):
-        #if ("oddrow" in rows["class"]) or ("evenrow" in rows["class"]):    
+        #if some exception occurs, the row receives 0
+        #caso ocorra algum problema, o valor da linha é preenchido com um zero
         try:
             dorms = rows.find("li", class_="icone-quartos").get_text().replace(" quartos", "")
         except:
@@ -47,7 +59,7 @@ def listagem(listagem):
         except:
             suite = 0
         try:   
-            vagas = rows.find("li", class_="icone-vagas").get_text(" ",strip=True)#.replace("vagas", "").replace("vaga", "")
+            vagas = rows.find("li", class_="icone-vagas").get_text(" ",strip=True)
         except:
             vagas = 0
         try:
@@ -70,10 +82,15 @@ def listagem(listagem):
 
 if __name__ == "__main__":
 
+    # Name of your csv file
+    # Nome do seu arquivo csv
     nome_arquivo = "imoveis_capao.csv"
 
     if os.path.exists(nome_arquivo):
         os.remove(nome_arquivo)
+
+    # First goes the main page, number page, and 'resto' (if needed)
+    # Para que o scraper va pulando as paginas, subistitua o numero da pagina pela variavel 'resto'
 
     site = 'https://www.zapimoveis.com.br/venda/casas/rs+capao-da-canoa/#{"precomaximo":"2147483647","parametrosautosuggest":[{"Bairro":"","Zona":"","Cidade":"CAPAO DA CANOA","Agrupamento":"","Estado":"RS"}],"pagina":"'
 
@@ -81,13 +98,7 @@ if __name__ == "__main__":
 
     resto = '","ordem":"Relevancia","paginaOrigem":"ResultadoBusca","semente":"82370447","formato":"Lista"}'
 
-    #site = 'https://www.zapimoveis.com.br/venda/casas/rs+capao-da-canoa/'
-
-
-
-   # resto = "2:%222%22,%22ordem%22:%22Relevancia%22,%22paginaOrigem%22:%22ResultadoBusca%22,%22semente%22:%22564095056%22,%22formato%22:%22Lista%22}"
-
-    print("Inicializando...")
+    print("Inicializando/Initializing...")
     while pagina < 19:
         listando = site + str(pagina) + resto
         listas = listagem(listando)
@@ -99,3 +110,4 @@ if __name__ == "__main__":
 
 if pagina > 1:
     print("Scrap efetuado com sucesso! Gravando arquivo....")
+    print("All done! Writing csv file....")
